@@ -89,7 +89,7 @@ class DateTime(DT):
                 except ValueError:
                     pass
             else:
-                raise ValueError("cannot convert string {0} to a Time object".format(init))
+                raise ValueError("cannot convert string {0} to a DateTime object".format(init))
         return init
 
     def __str__(self):
@@ -160,7 +160,7 @@ class DateTime(DT):
                else:
                    return self
            else:
-               return Duration(int(self) - int(other))
+               return DateTime(int(self) - int(other))
 
     def date(self):
         return Date(self)
@@ -171,8 +171,8 @@ class DateTime(DT):
 #    def date(self):
 #        return Date(self)
     
-class Time(DateTime):
-    pass
+#class Time(DateTime):
+#    pass
 
 class Date(DateTime):
     DEFAULT_TIME_FORMAT = "%Y%m%d"

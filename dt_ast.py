@@ -37,7 +37,7 @@ class DTNodeTransformer(ast.NodeTransformer):
 
 def ast_transform(root):
     parent_node = None
-    dt_class_names = set(c.__name__ for c in (Time, Duration))
+    dt_class_names = set(c.__name__ for c in (DateTime, Date, Duration))
 
     str_nodes = []
     for node in ast.walk(root):

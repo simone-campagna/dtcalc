@@ -16,5 +16,5 @@ for i in 0, 1:
         d = t1 - t0
         print("{0} - {1} => {2}".format(t1, t0, d))
 
-    Time.set_time_format("%Y-%m-%d/%H:%M:%S")
+    DateTime.set_time_format("%Y-%m-%d/%H:%M:%S")
 
