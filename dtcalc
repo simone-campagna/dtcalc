@@ -117,7 +117,7 @@ def main():
 		help='execute command CMD')
 
 
-    dt_locals = {'Time': Time, 'Duration': Duration, 'create_dt': create_dt}
+    dt_locals = {'Time': Time, 'DateTime': DateTime, 'Date': Date, 'Duration': Duration, 'create_dt': create_dt}
 
     options, args = parser.parse_args()
     if options.command:

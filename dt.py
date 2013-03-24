@@ -32,9 +32,9 @@ class DT(int, metaclass=MetaDT):
         raise NotImplemented()
 
     def __repr__(self):
-       return "{0}({1!r})".format(self.__class__.__name__, str(self))
+       return "{0}({1})".format(self.__class__.__name__, str(self))
 
-class DateTimeType(DT):
+class DateTime(DT):
     DEFAULT_TIME_FORMAT = "%Y%m%d %H:%M:%S"
     TIME_FORMAT = DEFAULT_TIME_FORMAT
     ALTERNATE_TIME_FORMATS = (
@@ -60,7 +60,7 @@ class DateTimeType(DT):
 
     @classmethod
     def set_time_format(cls, time_format):
-        cls.TIME_FORMAT = time_format
+        DateTime.TIME_FORMAT = time_format
 
     @classmethod
     def quantized(cls, time_quantum, t):
@@ -116,7 +116,7 @@ class DateTimeType(DT):
                 raise OverflowError("invalid operation {0!r} + {1!r}".format(self, other))
             else:
                 return self
-        if isinstance(other, DateTimeType):
+        if isinstance(other, DateTime):
             raise TypeError("invalid operands: {0} + {1}".format(self.__class__.__name__, other.__class__.__name__))
         elif isinstance(other, Duration):
             if other >= Duration.P_INF_VALUE:
@@ -133,7 +133,7 @@ class DateTimeType(DT):
             raise TypeError("invalid operands: {0} + {1}".format(self.__class__.__name__, other.__class__.__name__))
 
     def __sub__(self, other):
-       if isinstance(other, DateTimeType):
+       if isinstance(other, DateTime):
            if self == self.P_INF_VALUE:
                if other == self.P_INF_VALUE:
                    raise OverflowError("invalid operation {0!r} + {1!r}".format(self, other))
@@ -162,20 +162,24 @@ class DateTimeType(DT):
            else:
                return Duration(int(self) - int(other))
 
-     
-
-class DateTime(DateTimeType):
-    TIME_FORMAT = "%Y%m%d %H:%M:%S"
-    TIME_QUANTUM = 0
-
     def date(self):
         return Date(self)
+     
+
+#class DateTime(DateTimeType):
+#    TIME_QUANTUM = 0
+#    def date(self):
+#        return Date(self)
     
 class Time(DateTime):
     pass
 
-class Date(DateTimeType):
-    TIME_FORMAT = "%Y%m%d"
+class Date(DateTime):
+    DEFAULT_TIME_FORMAT = "%Y%m%d"
+    TIME_FORMAT = DEFAULT_TIME_FORMAT
+    ALTERNATE_TIME_FORMATS = (
+	DEFAULT_TIME_FORMAT,
+    )
     TIME_QUANTUM = 86400
     
     def datetime(self):
@@ -268,14 +272,14 @@ class Duration(DT):
             return fmt.format(n_days, hms, ms)
 
 def create_dt(s):
-    #print("DBG: CREATE_DT(s={0}, type={1}) ->".format(s, type(s)))
     if isinstance(s, (int, float)):
         return Duration(s)
     elif isinstance(s, DT):
         return s
     else:
-        for dtClass in Time, Duration:
+        for dtClass in Date, DateTime, Duration:
             try:
+                #print("DBG: CREATE_DT(s={0}, type={1}, {2}) ->".format(s, type(s), dtClass))
                 t = dtClass(s)
             except ValueError:
                 pass
