@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+
+import datetime
+import code
+import codeop
+import readline
+import rlcompleter
+import atexit
+import sys
+import os
+import textwrap
+
+from dt import *
+from dt_ast import *
+
+
+
+def reset_file(size, max_size, reason):
+    try:
+        print("Resetting history file {0} because it exceeded {1} {2}; it has {3}.\n".format(hist_file, max_size, reason, size))
+        with open(hist_file, 'w') as f:
+            pass
+    except IOError as e:
+        print("Couldn't reset history file {0}: {1}.\n".format(hist_file, e))
+
+def safe_getsize(hist_file):
+    try:
+        size = os.path.getsize(hist_file)
+    except OSError:
+        size = 0
+    return size
+
+def setup_hist(hist_file=None):
+    if hist_file is None:
+        hist_file = os.path.join(os.environ['HOME'], '.dtcalc_history')
+    max_size_bytes = 1000000
+    max_size_lines = 10000
+
+    #Code section, no need to modify this
+    lines = 0
+    size = safe_getsize(hist_file)
+
+    if size > max_size_bytes:
+        reset_file(size,max_size_bytes,"bytes")
+    else:
+        try:
+            readline.read_history_file(hist_file)
+            lines = readline.get_current_history_length()
+            if lines > max_size_lines:
+                try:
+                    readline.clear_history()
+                except NameError as e:
+                    print("readline.clear_history() not supported (%s), please delete history file %s by hand.\n" % (e,hist_file,))
+                reset_file(lines,max_size_lines,"lines")
+        except IOError:
+            try:
+                f = open(hist_file,'a')
+                f.close()
+            except IOError:
+                print("The file %s can't be created, check your hist_file variable.\n" % hist_file)
+
+    size = safe_getsize(hist_file)
+
+    #print("Current history file (%s) size: %s bytes, %s lines.\n" % (hist_file,size,readline.get_current_history_length(),))
+
+    readline.parse_and_bind("tab: complete")
+
+    atexit.register(readline.write_history_file, hist_file)
+
+class DtCompile(codeop.Compile):
+    def __call__(self, source, filename, symbol):
+        codeob = dt_compile(source, filename, symbol, self.flags, 1)
+        for feature in codeop._features:
+            if codeob.co_flags & feature.compiler_flag:
+                self.flags |= feature.compiler_flag
+        return codeob
+
+class DtCompiler(codeop.CommandCompiler):
+    def __init__(self):
+        codeop.CommandCompiler.__init__(self)
+        self.compiler = DtCompile()
+
+#    def __call__(self, source, filename="<input>", symbol="single"):
+#        print("call:", source, filename, symbol, self.compiler)
+#        return codeop._maybe_compile(self.compiler, source, filename, symbol)
+
+
+class DtInterpreter(code.InteractiveInterpreter):
+    def __init__(self, *l_args, **d_args):
+        code.InteractiveInterpreter.__init__(self, *l_args, **d_args)
+        self.compile = DtCompiler()
+
+class DtConsole(code.InteractiveConsole):
+    def __init__(self, *l_args, **d_args):
+        code.InteractiveConsole.__init__(self, *l_args, **d_args)
+        self.compile = DtCompiler()
+
+#def interactive():
+#    setup_hist()
+#    console = DtInterpreter({'Time': Time, 'Duration': Duration, 'create_dt': create_dt})
+#		 
+#    console.interact()
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(
+        formatter=optparse.IndentedHelpFormatter(max_help_position=36),
+        description="duration and time calculator",
+        usage="""{0} [options]""".format(os.path.basename(sys.argv[0])),
+    )
+
+    parser.add_option('--command', '-c',
+		metavar='CMD',
+		type='str',
+		dest='command',
+		default=None,
+		help='execute command CMD')
+
+
+    dt_locals = {'Time': Time, 'Duration': Duration, 'create_dt': create_dt}
+
+    options, args = parser.parse_args()
+    if options.command:
+        sys.argv = args
+        dt_eval(options.command, 'exec')
+        #dt_interpreter = DtInterpreter(dt_locals)
+        #dt_interpreter.runsource(options.command)
+    elif args:
+        filename = args.pop(0)
+        sys.argv = args
+        with open(filename, 'rb') as f_in:
+            source = f_in.read()
+        dt_eval(source, 'exec')
+    else:
+        setup_hist()
+        #dt_console = DtConsole(dt_locals)
+        sys.ps1 = "DTCALC> "
+        ex_t = datetime.datetime.now().strftime(Time.TIME_FORMAT)
+        ex_T = Time(ex_t)
+        ex_d = '2+00:45:10'
+        ex_D = Duration(ex_d)
+        ex_R = ex_T + ex_D
+        description = """\
+================================================================================
+Time and Duration calculator.
+It's python, but Time and Duration classes are available. Moreover, all strings
+representing Time or Duration objects are automatically converted. For instance:
+{t!r:20s}                        -> {T!r},
+{d!r:20s}                        -> {D!r},
+{t!r:20s} + {d!r:20s} -> {R!r}
+================================================================================
+Type "help", "copyright", "credits" or "license" for more information.""".format(t=ex_t, T=ex_T, d=ex_d, D=ex_D, R=ex_R)
+        
+        banner = """{program} {version}
+{description}""".format(
+		program=os.path.basename(sys.argv[0].title()),
+		description=description, #'\n'.join(textwrap.wrap(description)),
+		version="{v.major}.{v.minor}.{v.micro}".format(v=sys.version_info))
+        dt_console = DtConsole(dt_locals)
+        dt_console.interact(banner=banner)
+            
+            
+if __name__ == "__main__":
+    main()

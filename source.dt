@@ -1,0 +1,20 @@
+print('20121110 02:03:04' + '1:10')
+print('20121225 00:00:00' + '2:0:0')
+
+for i in 0, 1:
+    t0 = '20130101 01:10:05'
+    t1l = []
+    print()
+    print("=" * 80)
+    for d in 10, '1:10', '01:10', '01:10:10', Duration('2+12:00:00'), Duration.P_INF, Duration.M_INF:
+        t1 = t0 + d
+        print("{0} + {1} => {2}".format(t0, d, t1))
+        t1l.append(t1)
+    
+    print()
+    for t1 in t1l:
+        d = t1 - t0
+        print("{0} - {1} => {2}".format(t1, t0, d))
+
+    Time.set_time_format("%Y-%m-%d/%H:%M:%S")
+
