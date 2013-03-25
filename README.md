@@ -4,11 +4,11 @@ dtcalc
 Date/Time calculator
 
 Dtcalc is:
-* A python library to work with dates and times
+* A python library to work with dates, times and durations:
   * _Date_ represents a date (e. g.: `Date('20130324')`)
   * _DateTime_ represents a time (e. g. `DateTime('20130324 12:00:00')`)
   * _Duration_ represents a time duration (e. g. `Duration('00:30:00')`)
-* An application to easily compute expressions involving dates and times.
+* An application to easily compute expressions involving dates, times and durations.
 
 The `dtcalc` application is an extension of the standard python interpreter. It allows to directly write expressions like:
 ```python
